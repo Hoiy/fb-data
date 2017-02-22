@@ -1,6 +1,12 @@
 docker-compose up
 
-host: 192.168.99.100
+Database:
+mysql
+host: (check with docker-machine ip [name])
 user: root
-password: 
+password:
 
+Crawler:
+mounted . to /crawler
+
+docker run -it facebook_crawler_1

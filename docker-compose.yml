@@ -1,8 +1,21 @@
-db:
-  image: mysql
-  environment:
-    MYSQL_ROOT_PASSWORD: ""
-    MYSQL_ALLOW_EMPTY_PASSWORD: yes
-  ports:
-    - "3306:3306"
-  command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+version: '2'
+services:
+  facebook_db:
+    image: mysql
+    container_name: "facebook_db"
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3306:3306"
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+  crawler:
+    build: .
+    container_name: "crawler"
+    links:
+    - facebook_db
+    ports:
+    - "5000:5000"
+    volumes:
+    - .:/crawler
+    tty: true
