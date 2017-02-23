@@ -1,4 +1,6 @@
 docker-compose up
+npm install
+npm start
 
 Database:
 mysql
@@ -8,5 +10,4 @@ password:
 
 Crawler:
 mounted . to /crawler
-
 docker run -it facebook_crawler_1
