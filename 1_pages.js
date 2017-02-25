@@ -3,11 +3,11 @@ import FB from 'fb'
 import { getAccessToken } from './lib/fb-utils'
 import models from './models'
 import token from './token.json'
+
 promisifyAll(FB)
+FB.options({version: 'v2.8'})
 
 console.log(process.argv)
-
-FB.options({version: 'v2.8'})
 
 let min_fan_count = process.argv[5] ? process.argv[5] : 1000000
 let seed = process.argv[4] ? process.argv[4] : '11784025953'
@@ -15,7 +15,7 @@ let page_pool = new Set([seed])
 
 const upsertPage = function(response) {
     const res = Object.assign({}, response)
-    res.page_id = res.id
+    res.facebook_id = res.id
     delete res.id
     return models.sequelize.sync()
         .then(() => {

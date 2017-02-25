@@ -1,7 +1,7 @@
 'use strict';
 module.exports = function(sequelize, DataTypes) {
   var Page = sequelize.define('Page', {
-    page_id: DataTypes.STRING,
+    facebook_id: DataTypes.STRING,
     name: DataTypes.STRING,
     description: DataTypes.TEXT,
     about: DataTypes.TEXT,
