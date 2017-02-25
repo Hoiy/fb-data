@@ -12,29 +12,30 @@ FB.options({version: 'v2.8'})
 console.log(process.argv)
 
 const reactions = ['HAHA', 'LOVE', 'WOW', 'SAD', 'ANGRY']
+const reaction = reactions.indexOf('WOW')
 const query = '%s?fields=posts.limit(100){name,shares,comments.limit(0).summary(total_count),likes.limit(0).summary(total_count),reactions.type(%s).limit(0).summary(total_count),caption,message,description,status_type,type,link,full_picture,picture,source,created_time,updated_time}'
 
-const getPagesId = models.sequelize.query('SELECT id, facebook_id FROM Pages LIMIT 11', { type: models.sequelize.QueryTypes.SELECT })
+const getPagesId = models.sequelize.query('SELECT id, facebook_id FROM Pages', { type: models.sequelize.QueryTypes.SELECT })
 
-const batch = 3
+const batch = 25
 
 const upsertPosts = pageId => {
     return response => {
         let post_count = 0
         let chain = models.sequelize.sync()
-        for (let post of response.posts.data) {
+        for (let post of _.get(response, 'posts.data', [])) {
             const p = Object.assign({}, post, {
                 page_id: pageId,
                 facebook_id: post.id,
                 name: post.name,
                 share: _.get(post, 'shares.count', 0),
-                comment: post.comments.summary.total_count,
+                comment: _.get(post, 'comments.summary.total_count', 0),
                 like: post.likes.summary.total_count,
-                love: null,
-                haha: post.reactions.summary.total_count,
-                wow: null,
-                sad: null,
-                angry: null,
+                love: reaction == reactions.indexOf('LOVE') ? post.reactions.summary.total_count : null,
+                haha: reaction == reactions.indexOf('HAHA') ? post.reactions.summary.total_count : null,
+                wow: reaction == reactions.indexOf('WOW') ? post.reactions.summary.total_count : null,
+                sad: reaction == reactions.indexOf('SAD') ? post.reactions.summary.total_count : null,
+                angry: reaction == reactions.indexOf('ANGRY') ? post.reactions.summary.total_count : null,
             })
             delete p.id
             chain = chain.then(() => {
@@ -57,13 +58,13 @@ const upsertPosts = pageId => {
 }
 
 const fetchPagePosts = function(pageId, facebookId) {
-    const q = sprintf(query, facebookId, reactions[0])
+    const q = sprintf(query, facebookId, reactions[reaction])
     return FB.napiAsync(q)
         .catch(err => {
             console.log('Failed to make FB API call: ', q, err)
         })
         .then(res => {
-            console.log(new Date(), sprintf('Made FB API call on Page %s', pageId))
+            console.log(new Date(), sprintf('Made FB API call on Page %s', facebookId))
             return res
         })
         .then(upsertPosts(pageId))

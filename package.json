@@ -12,6 +12,7 @@
   "dependencies": {
     "es6-promisify-all": "^0.1.0",
     "fb": "^1.1.1",
+    "languagedetect": "^1.1.1",
     "lodash": "^4.17.4",
     "mysql": "^2.13.0",
     "sequelize": "^3.30.2",

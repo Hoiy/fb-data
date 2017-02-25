@@ -7,7 +7,7 @@ module.exports = function(sequelize, DataTypes) {
     about: DataTypes.TEXT,
     fan_count: DataTypes.BIGINT,
     category: DataTypes.STRING,
-    website: DataTypes.STRING,
+    website: DataTypes.TEXT,
     talking_about_count: DataTypes.BIGINT
   }, {
     classMethods: {

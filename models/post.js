@@ -20,7 +20,7 @@ module.exports = function(sequelize, DataTypes) {
     link: DataTypes.STRING(2048),
     full_picture: DataTypes.STRING(2048),
     picture: DataTypes.STRING(2048),
-    source: DataTypes.STRING(2048),
+    source: DataTypes.TEXT,
     created_time: DataTypes.DATE,
     updated_time: DataTypes.DATE
   }, {

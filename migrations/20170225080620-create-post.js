@@ -70,7 +70,7 @@ module.exports = {
         type: Sequelize.STRING(2048)
       },
       source: {
-        type: Sequelize.STRING(2048)
+        type: Sequelize.TEXT
       },
       created_time: {
         type: Sequelize.DATE

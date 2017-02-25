@@ -28,7 +28,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       website: {
-        type: Sequelize.STRING
+        type: Sequelize.TEXT
       },
       talking_about_count: {
         type: Sequelize.BIGINT
