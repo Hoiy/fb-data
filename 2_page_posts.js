@@ -14,7 +14,9 @@ console.log(process.argv)
 const reactions = ['HAHA', 'LOVE', 'WOW', 'SAD', 'ANGRY']
 const query = '%s?fields=posts.limit(100){name,shares,comments.limit(0).summary(total_count),likes.limit(0).summary(total_count),reactions.type(%s).limit(0).summary(total_count),caption,message,description,status_type,type,link,full_picture,picture,source,created_time,updated_time}'
 
-const getPagesId = models.sequelize.query('SELECT id, facebook_id FROM Pages LIMIT 3', { type: models.sequelize.QueryTypes.SELECT })
+const getPagesId = models.sequelize.query('SELECT id, facebook_id FROM Pages LIMIT 11', { type: models.sequelize.QueryTypes.SELECT })
+
+const batch = 3
 
 const upsertPosts = pageId => {
     return response => {
@@ -55,18 +57,16 @@ const upsertPosts = pageId => {
 }
 
 const fetchPagePosts = function(pageId, facebookId) {
-    return () => {
-        const q = sprintf(query, facebookId, reactions[0])
-        return FB.napiAsync(q)
-            .then(res => {
-                console.log(new Date(), 'Made FB API call on Page %s', pageId)
-                return res
-            })
-            .then(upsertPosts(pageId))
-            .catch(err => {
-                console.log('Failed to make FB API call: ', q, err)
-            })
-    }
+    const q = sprintf(query, facebookId, reactions[0])
+    return FB.napiAsync(q)
+        .catch(err => {
+            console.log('Failed to make FB API call: ', q, err)
+        })
+        .then(res => {
+            console.log(new Date(), sprintf('Made FB API call on Page %s', pageId))
+            return res
+        })
+        .then(upsertPosts(pageId))
 }
 
 Promise.all([getPagesId, getAccessToken(token)])
@@ -75,11 +75,12 @@ Promise.all([getPagesId, getAccessToken(token)])
     return values[0]
 })
 .then(pageIds => {
-    let fetchAllPages = Promise.resolve()
-    for (let { id, facebook_id } of pageIds.values()) {
-        fetchAllPages = fetchAllPages.then(fetchPagePosts(id, facebook_id))
+    let batch_pageIds = _.chunk(pageIds, batch)
+    let promise = Promise.resolve()
+    for (let b of batch_pageIds) {
+        promise = promise.then(() => Promise.all(_.map(b, (v) => fetchPagePosts(v.id, v.facebook_id))))
     }
-    return fetchAllPages
+    return promise
 })
 .catch(err => {
     console.log(err)
