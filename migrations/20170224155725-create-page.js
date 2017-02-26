@@ -10,6 +10,7 @@ module.exports = {
       },
       facebook_id: {
         type: Sequelize.STRING,
+        allowNull: false,
         unique: true
       },
       name: {
@@ -32,6 +33,9 @@ module.exports = {
       },
       talking_about_count: {
         type: Sequelize.BIGINT
+      },
+      language: {
+        type: Sequelize.STRING
       },
       createdAt: {
         allowNull: false,

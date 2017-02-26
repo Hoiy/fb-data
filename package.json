@@ -1,26 +1,29 @@
 {
-  "name": "facebook-data",
-  "version": "1.0.0",
-  "description": "docker-compose up",
-  "main": "index.js",
-  "scripts": {
-    "1": "babel-node 1_pages.js --presets latest",
-    "2": "babel-node 2_page_posts.js --presets latest"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "es6-promisify-all": "^0.1.0",
-    "fb": "^1.1.1",
-    "languagedetect": "^1.1.1",
-    "lodash": "^4.17.4",
-    "mysql": "^2.13.0",
-    "sequelize": "^3.30.2",
-    "sprintf-js": "^1.0.3"
-  },
-  "devDependencies": {
-    "babel-cli": "^6.23.0",
-    "babel-preset-latest": "^6.22.0",
-    "sequelize-cli": "^2.5.1"
-  }
+    "name": "facebook-data",
+    "version": "1.0.0",
+    "description": "docker-compose up",
+    "main": "index.js",
+    "scripts": {
+        "1": "babel-node 1_pages.js --presets latest",
+        "2": "babel-node 2_page_posts.js --presets latest",
+        "3": "babel-node 3_detect_page_language.js --presets latest",
+        "4": "babel-node 4_media_pages_posts.js --presets latest"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "es6-promisify-all": "^0.1.0",
+        "fb": "^1.1.1",
+        "languagedetect": "^1.1.1",
+        "lodash": "^4.17.4",
+        "mysql": "^2.13.0",
+        "promise-mysql": "^3.0.0",
+        "sequelize": "^3.30.2",
+        "sprintf-js": "^1.0.3"
+    },
+    "devDependencies": {
+        "babel-cli": "^6.23.0",
+        "babel-preset-latest": "^6.22.0",
+        "sequelize-cli": "^2.5.1"
+    }
 }

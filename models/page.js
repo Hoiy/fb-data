@@ -8,7 +8,8 @@ module.exports = function(sequelize, DataTypes) {
     fan_count: DataTypes.BIGINT,
     category: DataTypes.STRING,
     website: DataTypes.TEXT,
-    talking_about_count: DataTypes.BIGINT
+    talking_about_count: DataTypes.BIGINT,
+    language: DataTypes.STRING
   }, {
     classMethods: {
       associate: function(models) {
