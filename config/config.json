@@ -2,7 +2,7 @@
     "development": {
         "username": "root",
         "password": null,
-        "database": "facebook-dev",
+        "database": "facebook-dev-2",
         "host": "192.168.99.100",
         "dialect": "mysql",
         "dialectOptions": {

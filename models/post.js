@@ -17,7 +17,7 @@ module.exports = function(sequelize, DataTypes) {
     description: DataTypes.TEXT,
     status_type: DataTypes.STRING,
     type: DataTypes.STRING,
-    link: DataTypes.STRING(2048),
+    link: DataTypes.TEXT,
     full_picture: DataTypes.STRING(2048),
     picture: DataTypes.STRING(2048),
     source: DataTypes.TEXT,

@@ -61,7 +61,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       link: {
-        type: Sequelize.STRING(2048)
+        type: Sequelize.TEXT
       },
       full_picture: {
         type: Sequelize.STRING(2048)

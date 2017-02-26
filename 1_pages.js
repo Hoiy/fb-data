@@ -1,9 +1,10 @@
 import promisifyAll from 'es6-promisify-all'
 import FB from 'fb'
-import { getAccessToken } from './lib/fb-utils'
+import { getAccessToken, PromiseThrottleQueue } from './lib/fb-utils'
 import models from './models'
 import token from './token.json'
 import _ from 'lodash'
+import { sprintf } from 'sprintf-js'
 
 promisifyAll(FB)
 FB.options({version: 'v2.8'})
@@ -14,78 +15,113 @@ let min_fan_count = process.argv[5] ? process.argv[5] : 200000
 let seed = process.argv[4] ? process.argv[4] : '11784025953'
 let page_pool = new Set([seed])
 
-const upsertPage = function(response) {
-    const res = Object.assign({}, response)
-    res.facebook_id = res.id
-    delete res.id
-    return models.sequelize.sync()
-        .then(() => {
-            return models.Page.upsert(res)
-                .catch(err => {
-                    console.log('Failed to upsert page:\n', err)
-                })
-        })
-        .then(() => {
-            return response
-        })
-}
+const reactions = ['HAHA', 'LOVE', 'WOW', 'SAD', 'ANGRY']
+const reaction = reactions.indexOf('WOW')
+const query = '%s?fields=id,name,description,about,fan_count,category,website,likes.limit(1000){fan_count},engagement,talking_about_count,posts.limit(100){name,shares,comments.limit(0).summary(total_count),likes.limit(0).summary(total_count),reactions.type(%s).limit(0).summary(total_count),caption,message,description,status_type,type,link,full_picture,picture,source,created_time,updated_time}'
 
-const fetchPage = function(id) {
-    console.log(new Date(), id)
-    return FB.napiAsync( id + '?fields=id,name,description,about,fan_count,category,website,likes.limit(1000){fan_count},engagement,talking_about_count')
-        .catch(err => {
-            console.log('FB napiAsync Failed ', id, err)
-            if(_.get(err, 'error.code', null) === 'ENOTFOUND') {
-                console.log('Trying again ', id)
-                queue.push(id)
-            }
-        })
-        .then(upsertPage)
-        .then(res => {
-            let likes = _.get(res, 'likes.data', [])
-            likes.map(v => {
-                if(v.fan_count >= min_fan_count && !page_pool.has(v.id)) {
-                    page_pool.add(v.id)
-                    queue.push(v.id)
+const createPromiseUpsertPage = function(response) {
+    const page = Object.assign({}, response)
+    page.facebook_id = page.id
+    delete page.id
+
+    return models.Page.upsert(page)
+        .then(() => {
+            console.log(sprintf('Upserted Page %s', page.name));
+            return models.Page.findOne({
+                where: {
+                    facebook_id: {
+                        $eq: page.facebook_id
+                    }
                 }
+            })
+            .then(p => {
+                response.page_id = p.id
+                return response
             })
         })
 }
 
-let queue = {
-    push: function(args) { this.queue.push(args) },
-    queue: [],
-    start: function(delay, timeout, fn) {
-        return new Promise(resolve=>{
-            let idle_time = 0
-            let count = 0
-            let loop = setInterval(() => {
-                if(idle_time >= timeout) {
-                    console.log('bai')
-                    clearInterval(loop)
-                    return resolve()
-                }
-                if(this.queue.length > 0) {
-                    const args = this.queue.shift()
-                    console.log(new Date(), this.queue.length, ++count, 'Executing...', args)
-                    fn(args)
-                    idle_time = 0
-                } else {
-                    idle_time += delay
-                }
-            }, delay)
+const createPromiseUpsertPosts = function(response) {
+    let posts = _.get(response, 'posts.data', [])
+    posts = posts.map((v) => {
+        const p = Object.assign({}, v, {
+            page_id: response.page_id,
+            facebook_id: v.id,
+            share: _.get(v, 'shares.count', 0),
+            comment: _.get(v, 'comments.summary.total_count', 0),
+            like: _.get(v, 'likes.summary.total_count', 0),
+            love: reaction == reactions.indexOf('LOVE') ? _.get(v, 'reactions.summary.total_count', 0) : null,
+            haha: reaction == reactions.indexOf('HAHA') ? _.get(v, 'reactions.summary.total_count', 0) : null,
+            wow: reaction == reactions.indexOf('WOW') ? _.get(v, 'reactions.summary.total_count', 0) : null,
+            sad: reaction == reactions.indexOf('SAD') ? _.get(v, 'reactions.summary.total_count', 0) : null,
+            angry: reaction == reactions.indexOf('ANGRY') ? _.get(v, 'reactions.summary.total_count', 0) : null
         })
-    }
+        delete p.id
+        return p
+    })
+    return models.Post.bulkCreate(posts, {
+        updateOnDuplicate: [
+            'name',
+            'share',
+            'comment',
+            'like',
+            'love',
+            'haha',
+            'wow',
+            'sad',
+            'angry',
+            'caption',
+            'message',
+            'description',
+            'status_type',
+            'type',
+            'link',
+            'full_picture',
+            'picture',
+            'source'
+        ]
+    })
+    .then(() => [
+        console.log(sprintf('Upserted %d posts from %s', posts.length, response.name))
+    ])
 }
 
-queue.start(20, 10000, fetchPage).then(() => {
-    console.log('done')
-})
+const createPromiseFBQuery = function(facebook_id) {
+    console.log(new Date(), facebook_id)
+    return FB.napiAsync(sprintf(query, facebook_id, reactions[reaction]) )
+        .catch(err => {
+            return Promise.reject(err)
+        })
+}
+
+const createPromiseProcessPage = function(facebook_id) {
+    return createPromiseFBQuery(facebook_id)
+        .then(res => {
+            // queue liked page
+            let like_pages = _.get(res, 'likes.data', [])
+            for( let page of like_pages ) {
+                if(page.fan_count >= min_fan_count && !page_pool.has(page.id)) {
+                    page_pool.add(page.id)
+                    queue.push(page.id)
+                }
+            }
+            return res
+        })
+        .then(res => {
+            return createPromiseUpsertPage(res)
+        })
+        .then(res => {
+            return createPromiseUpsertPosts(res)
+        })
+}
+
+const queue = new PromiseThrottleQueue(createPromiseProcessPage, 1000, 60000)
 
 getAccessToken(token)
 .then(accessToken => {
     FB.setAccessToken(accessToken)
-    return fetchPage(seed)
+    queue.push(seed)
+    return queue.start()
 })
 .catch(err => {
     console.log(err)
