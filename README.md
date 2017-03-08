@@ -22,7 +22,7 @@ facebook_id: {
   unique: true
 },
 
-./node_modules/.bin/sequelize model:create --force --name Post --attributes 'page_id:integer,facebook_id:string,name:string,share:bigint,comment:bigint,like:bigint,love:bigint,haha:bigint,wow:bigint,sad:bigint,angry:bigint,caption:text,message:text,description:text,status_type:string,type:string,link:text,full_picture:string(2048),picture:string(2048),source:text,created_time:date,updated_time:date'
+./node_modules/.bin/sequelize model:create --force --name Post --attributes 'page_id:integer,facebook_id:string,name:string,share:bigint,comment:bigint,like:bigint,love:bigint,haha:bigint,wow:bigint,sad:bigint,angry:bigint,caption:text,message:text("long"),description:text,status_type:string,type:string,link:text,full_picture:string(2048),picture:string(2048),source:text,created_time:date,updated_time:date'
 
 page_id: {
   type: Sequelize.INTEGER,

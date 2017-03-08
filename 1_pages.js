@@ -16,7 +16,7 @@ let seed = process.argv[4] ? process.argv[4] : '11784025953'
 let page_pool = new Set([seed])
 
 const reactions = ['HAHA', 'LOVE', 'WOW', 'SAD', 'ANGRY']
-const reaction = reactions.indexOf('WOW')
+const reaction = reactions.indexOf('LOVE')
 const query = '%s?fields=id,name,description,about,fan_count,category,website,likes.limit(1000){fan_count},engagement,talking_about_count,posts.limit(100){name,shares,comments.limit(0).summary(total_count),likes.limit(0).summary(total_count),reactions.type(%s).limit(0).summary(total_count),caption,message,description,status_type,type,link,full_picture,picture,source,created_time,updated_time}'
 
 const createPromiseUpsertPage = function(response) {
@@ -26,7 +26,7 @@ const createPromiseUpsertPage = function(response) {
 
     return models.Page.upsert(page)
         .then(() => {
-            console.log(sprintf('Upserted Page %s', page.name));
+            //console.log(sprintf('Upserted Page %s', page.name));
             return models.Page.findOne({
                 where: {
                     facebook_id: {
@@ -51,10 +51,10 @@ const createPromiseUpsertPosts = function(response) {
             comment: _.get(v, 'comments.summary.total_count', 0),
             like: _.get(v, 'likes.summary.total_count', 0),
             love: reaction == reactions.indexOf('LOVE') ? _.get(v, 'reactions.summary.total_count', 0) : null,
-            haha: reaction == reactions.indexOf('HAHA') ? _.get(v, 'reactions.summary.total_count', 0) : null,
-            wow: reaction == reactions.indexOf('WOW') ? _.get(v, 'reactions.summary.total_count', 0) : null,
-            sad: reaction == reactions.indexOf('SAD') ? _.get(v, 'reactions.summary.total_count', 0) : null,
-            angry: reaction == reactions.indexOf('ANGRY') ? _.get(v, 'reactions.summary.total_count', 0) : null
+            //haha: reaction == reactions.indexOf('HAHA') ? _.get(v, 'reactions.summary.total_count', 0) : null,
+            //wow: reaction == reactions.indexOf('WOW') ? _.get(v, 'reactions.summary.total_count', 0) : null,
+            //sad: reaction == reactions.indexOf('SAD') ? _.get(v, 'reactions.summary.total_count', 0) : null,
+            //angry: reaction == reactions.indexOf('ANGRY') ? _.get(v, 'reactions.summary.total_count', 0) : null
         })
         delete p.id
         return p
@@ -90,6 +90,7 @@ const createPromiseFBQuery = function(facebook_id) {
     console.log(new Date(), facebook_id)
     return FB.napiAsync(sprintf(query, facebook_id, reactions[reaction]) )
         .catch(err => {
+            queue.push(facebook_id)
             return Promise.reject(err)
         })
 }
@@ -113,9 +114,12 @@ const createPromiseProcessPage = function(facebook_id) {
         .then(res => {
             return createPromiseUpsertPosts(res)
         })
+        .catch(err => {
+            console.log(err)
+        })
 }
 
-const queue = new PromiseThrottleQueue(createPromiseProcessPage, 1000, 60000)
+const queue = new PromiseThrottleQueue(createPromiseProcessPage, 125, 60000)
 
 getAccessToken(token)
 .then(accessToken => {

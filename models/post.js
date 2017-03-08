@@ -13,7 +13,7 @@ module.exports = function(sequelize, DataTypes) {
     sad: DataTypes.BIGINT,
     angry: DataTypes.BIGINT,
     caption: DataTypes.TEXT,
-    message: DataTypes.TEXT,
+    message: DataTypes.TEXT("long"),
     description: DataTypes.TEXT,
     status_type: DataTypes.STRING,
     type: DataTypes.STRING,

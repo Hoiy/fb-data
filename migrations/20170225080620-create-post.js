@@ -49,7 +49,7 @@ module.exports = {
         type: Sequelize.TEXT
       },
       message: {
-        type: Sequelize.TEXT
+        type: Sequelize.TEXT("long")
       },
       description: {
         type: Sequelize.TEXT
