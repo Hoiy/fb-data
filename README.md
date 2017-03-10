@@ -43,3 +43,13 @@ npm run 1
 post.js:
 var Page = require('./page'); // import
 Post.belongsTo(Page); // in associate function
+
+# Create BigQuery Table
+bq mk facebook
+bq mk -t facebook.pages
+bq mk -t facebook.posts
+
+# Regenerate schema
+bq rm facebook.posts
+bq rm facebook.pages
+npm run 0
