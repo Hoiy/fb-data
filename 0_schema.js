@@ -7,7 +7,7 @@ import bsg from 'bigquery-schema-generator'
 promisifyAll(FB)
 FB.options({version: 'v2.8'})
 const bigquery = BigQuery(config)
-const dataset = bigquery.dataset('facebook')
+const dataset = bigquery.dataset('en_facebook')
 //const pages_table = dataset.table('pages')
 //const posts_table = dataset.table('posts')
 /*
@@ -35,6 +35,7 @@ let schema = bsg({ name: 'Auli\'i Cravalho as Moana | Untold',
   console.log(schema);
 */
 
+/*
 const pages_opt = {
     schema: [
         {
@@ -92,6 +93,7 @@ dataset.createTable('pages', pages_opt)
         console.log(err)
     })
 )
+*/
 
 const posts_opt = {
     schema: [ { name: 'name', type: 'STRING', mode: 'NULLABLE' },

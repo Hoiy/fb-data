@@ -49,6 +49,8 @@ bq mk facebook
 bq mk -t facebook.pages
 bq mk -t facebook.posts
 
+bq mk en_facebook
+
 # Regenerate schema
 bq rm facebook.posts
 bq rm facebook.pages
