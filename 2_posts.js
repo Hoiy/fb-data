@@ -49,6 +49,11 @@ const createPromiseUpsertPosts = function(posts) {
 
 const createPromiseFBQuery = function(params) {
     console.log(new Date, params.facebook_id, params.query)
+    crawlDepth[params.facebook_id] = _.get(crawlDepth, params.facebook_id, 0)
+    if(crawlDepth[params.facebook_id] >= 6) {
+        return
+    }
+    crawlDepth[params.facebook_id]++
     return FB.napiAsync(params.query)
         .catch(err => {
             queue.push({
@@ -68,10 +73,12 @@ const createPromiseFBQuery = function(params) {
                 post.page_id = params.facebook_id
             }
             createPromiseUpsertPosts(posts)
-            queue.push({
-                facebook_id: params.facebook_id,
-                query: next
-            })
+            if(next) {
+                queue.push({
+                    facebook_id: params.facebook_id,
+                    query: next
+                })
+            }
         })
         .catch(err => {
             console.log('Error on FB Query!', err)
@@ -79,14 +86,16 @@ const createPromiseFBQuery = function(params) {
 }
 
 const queue = new PromiseThrottleQueue(createPromiseFBQuery, 125, 60000)
+const crawlDepth = {}
 
 getAccessToken(token)
 .then(accessToken => {
     FB.setAccessToken(accessToken)
-    let facebook_id = pages.pop()
-    queue.push({
-        facebook_id,
-        query: sprintf(query, facebook_id, reactions[reaction])
+    pages.map(v => {
+        queue.push({
+            facebook_id: v,
+            query: sprintf(query, v, reactions[reaction])
+        })
     })
     return queue.start()
 })
