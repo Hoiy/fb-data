@@ -95,6 +95,8 @@ dataset.createTable('pages', pages_opt)
 )
 */
 
+
+/*
 const posts_opt = {
     schema: [ { name: 'name', type: 'STRING', mode: 'NULLABLE' },
   { name: 'caption', type: 'STRING', mode: 'NULLABLE' },
@@ -123,6 +125,24 @@ const posts_opt = {
 
 dataset.table('posts').delete().then(() =>
 dataset.createTable('posts', posts_opt)
+    .then((results) => {
+        const table = results[0]
+        console.log(`Table ${table.id} created.`)
+        return table
+    })
+    .catch(err => {
+        console.log(err)
+    })
+)
+*/
+
+const posts_corpus_opt = {
+    schema: [ { name: 'id', type: 'STRING', mode: 'NULLABLE' },
+    { name: 'corpus', type: 'STRING', mode: 'NULLABLE' }]
+}
+
+dataset.table('posts_corpus').delete().then(() =>
+dataset.createTable('posts_corpus', posts_corpus_opt)
     .then((results) => {
         const table = results[0]
         console.log(`Table ${table.id} created.`)
