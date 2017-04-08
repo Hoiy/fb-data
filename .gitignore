@@ -3,3 +3,5 @@ node_modules
 token.json
 bigquery_cred.json
 config.json
+data
+link_posts_corpus
